@@ -64,6 +64,8 @@
 #'                glm = m2,
 #'                glm_pois = m3), criteria = 1:32)
 #'
+#' @importFrom methods is
+#'
 #' @export
 
 IC <- function(model,
@@ -121,7 +123,7 @@ IC <- function(model,
     criteria <- method_names[criteria]
   }
 
-  if (class(model) == "list") {
+  if (is(model, "list")) {
     if (is.null(names(model))) {
       names(model) <- paste("model", 1:length(model))
     }
