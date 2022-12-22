@@ -1,0 +1,288 @@
+#' @title Informational Complexity
+#'
+#' @description These functions calculates Informational Complexity
+#' (ICOMP) variants for "lm" and "glm" objects.
+#'
+#' @param model a "lm" or "glm" object
+#' @param type type of ICOMP. Available types are "IFIM", "PEU", "PEU_LN" and "CICOMP". Default is "IFIM".
+#' @param C type of complexity. Available types are "CF", "C1", "C1F" and "C1R". Default is "C1".
+#'
+#' @details
+#' ICOMP(IFIM) (Bozdogan, 2003) is calculated as
+#'
+#' \deqn{-2LL(theta) + 2C(F^{-1})}
+#'
+#' ICOMP(IFIM-peu) (Koc and Bozdogan, 2015) as
+#'
+#' \deqn{-2LL(theta) + k + 2C(F^{-1})}
+#'
+#' ICOMP(IFIM-peuln) (Bozdogan, 2010) as
+#'
+#' \deqn{-2LL(theta) + k + 2log(n)C(F^{-1})}
+#'
+#' and CICOMP (Pamukcu et al., 2015) as
+#'
+#' \deqn{-2LL(theta) + k(log(n) + 1) + 2C(F^{-1})}
+#'
+#' \eqn{F} is the fisher information matrix. \eqn{F^{-1}} is the
+#' reverse Fisher information matrix.
+#' \eqn{C} is the complexity measure. Four variants are available:
+#'
+#' \eqn{C_1} (Bozdogan, 2010) is
+#'
+#' \deqn{C_1(F^{-1}) = s/2*log(lambda_a / lambda_g)}
+#'
+#' \eqn{C_F} (Bozdogan, 2010) is
+#'
+#' \deqn{C_F(F^{-1}) = 1/s*sum_i^s(lambda_i - lambda_a)}
+#'
+#' \eqn{C_1F} (Bozdogan, 2010) is
+#'
+#' \deqn{C_1F(F^{-1}) = 1/(4lambda_a^2)*sum_i^s(lambda_i - lambda_a)}
+#'
+#' \eqn{C_1R} (Bozdogan, 2000) is
+#'
+#' \deqn{C_1R(F^{-1}) = 1/2*log(|R|)}
+#'
+#' Here, \eqn{R} is the correlation matrix of the model, \eqn{lambda_1, ..., lambda_s}
+#' are eigenvalues of \eqn{F}, \eqn{lambda_a} and \eqn{lambda_g} are arithmetic and
+#' geometric mean of eigenvalues of \eqn{F}, respectively. \eqn{s} is the dimension
+#' of \eqn{F}.
+#' While calculating the Fisher information matrix (\eqn{F}), we used
+#' the joint parameters (\eqn{beta,sigma^2}) of the models. In \eqn{C1R(.)} function,
+#' we utilized the usual variance-covariance matrix \eqn{Cov(beta)} of the
+#' models. beta is the vector of regression coefficients.
+#'
+#' @return Informational Complexity measurement of the model
+#'
+#' @references
+#' Bozdogan, H. (2003). Intelligent Statistical Data Mining with Information Complexity and Genetic Algorithms Hamparsum Bozdogan University of Tennessee, Knoxville, USA. In Statistical data mining and knowledge discovery (pp. 47-88). Chapman and Hall/CRC.
+#'
+#' Koc, E. K., & Bozdogan, H. (2015). Model selection in multivariate adaptive regression splines (MARS) using information complexity as the fitness function. Machine Learning, 101(1), 35-58.
+#'
+#' Bozdogan, H. (2010). A new class of information complexity (ICOMP) criteria with an application to customer profiling and segmentation. İstanbul Üniversitesi İşletme Fakültesi Dergisi, 39(2), 370-398.
+#'
+#' Pamukçu, E., Bozdogan, H., & Çalık, S. (2015). A novel hybrid dimension reduction technique for undersized high dimensional gene expression data sets using information complexity criterion for cancer classification. Computational and mathematical methods in medicine, 2015.
+#'
+#' Bozdogan, H. (2000). Akaike's information criterion and recent developments in information complexity. Journal of mathematical psychology, 44(1), 62-91.
+#'
+#' @importFrom stats logLik cov2cor
+#' @examples
+#' x1 <- rnorm(100, 3, 2)
+#' x2 <- rnorm(100, 5, 3)
+#' x3 <- rnorm(100, 67, 5)
+#' err <- rnorm(100, 0, 4)
+#'
+#' ## round so we can use it for Poisson regression
+#' y <- round(3 + 2*x1 - 5*x2 + 8*x3 + err)
+#'
+#' m1 <- lm(y~x1 + x2 + x3)
+#' m2 <- glm(y~x1 + x2 + x3, family = "gaussian")
+#' m3 <- glm(y~x1 + x2 + x3, family = "poisson")
+#'
+#'ICOMP_IFIM_CF(m1)
+#'ICOMP_IFIM_CF(m2)
+#'ICOMP_IFIM_CF(m3)
+#'CICOMP_C1(m1)
+#'CICOMP_C1(m2)
+#'CICOMP_C1(m3)
+#'ICOMP(m1, type = "PEU", C = "C1R")
+#'
+#'
+#' @rdname ICOMP
+#' @export
+
+ICOMP <- function(model, type = "IFIM", C = "C1") {
+  if (type!= "CICOMP") {
+    f <- match.fun(paste0("ICOMP_", type, "_", C))
+  }
+  if (type == "CICOMP") {
+    f <- match.fun(paste0(type, "_", C))
+  }
+  return(f(model))
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_IFIM_CF <- function(model) {
+  LL <- logLik(object = model)
+  ev <- eigen(reverse_fisher(model))$values
+  m <- mean(ev)
+  CF <- mean((ev - m)^2)
+  c(-2*LL + 2*CF)
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_IFIM_C1 <- function(model) {
+  LL <- logLik(object = model)
+  ev <- eigen(reverse_fisher(model))$values
+  p <- length(ev)
+  gm <- prod(ev)^(1/p)
+  m <- mean(ev)
+  C1 <- p/2*log(m/gm)
+  c(-2*LL + 2*C1)
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_IFIM_C1F <- function(model) {
+  LL <- logLik(object = model)
+  ev <- eigen(reverse_fisher(model))$values
+  m <- mean(ev)
+  C1F <- sum((ev - m)^2)/(4*m^2)
+  c(-2*LL + 2*C1F)
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_IFIM_C1R <- function(model) {
+  LL <- logLik(object = model)
+  R <- cov2cor(reverse_fisher(model))
+  C1R <- -0.5*log(det(R))
+  c(-2*LL + 2*C1R)
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_PEU_CF <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  ev <- eigen(reverse_fisher(model))$values
+  m <- mean(ev)
+  CF <- mean((ev - m)^2)
+  c(-2*LL + 2*CF + df)
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_PEU_C1 <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  ev <- eigen(reverse_fisher(model))$values
+  p <- length(ev)
+  gm <- prod(ev)^(1/p)
+  m <- mean(ev)
+  C1 <- p/2*log(m/gm)
+  c(-2*LL + 2*C1 + df)
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_PEU_C1F <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  ev <- eigen(reverse_fisher(model))$values
+  m <- mean(ev)
+  C1F <- sum((ev - m)^2)/(4*m^2)
+  c(-2*LL + 2*C1F + df)
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_PEU_C1R <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  R <- cov2cor(reverse_fisher(model))
+  C1R <- -0.5*log(det(R))
+  c(-2*LL + 2*C1R + df)
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_PEU_LN_CF <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  n <- length(model$residuals)
+  ev <- eigen(reverse_fisher(model))$values
+  m <- mean(ev)
+  CF <- mean((ev - m)^2)
+  c(-2*LL + 2*log(n)*CF + df)
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_PEU_LN_C1 <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  n <- length(model$residuals)
+  ev <- eigen(reverse_fisher(model))$values
+  p <- length(ev)
+  gm <- prod(ev)^(1/p)
+  m <- mean(ev)
+  C1 <- p/2*log(m/gm)
+  c(-2*LL + 2*log(n)*C1 + df)
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_PEU_LN_C1F <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  n <- length(model$residuals)
+  ev <- eigen(reverse_fisher(model))$values
+  m <- mean(ev)
+  C1F <- sum((ev - m)^2)/(4*m^2)
+  c(-2*LL + 2*log(n)*C1F + df)
+}
+
+#' @rdname ICOMP
+#' @export
+ICOMP_PEU_LN_C1R <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  n <- length(model$residuals)
+  R <- cov2cor(reverse_fisher(model))
+  C1R <- -0.5*log(det(R))
+  c(-2*LL + 2*log(n)*C1R + df)
+}
+
+
+#' @rdname ICOMP
+#' @export
+CICOMP_CF <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  n <- length(model$residuals)
+  ev <- eigen(reverse_fisher(model))$values
+  m <- mean(ev)
+  CF <- mean((ev - m)^2)
+  c(-2*LL + df*(log(n) + 1) + 2*CF)
+}
+
+#' @rdname ICOMP
+#' @export
+CICOMP_C1 <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  n <- length(model$residuals)
+  ev <- eigen(reverse_fisher(model))$values
+  p <- length(ev)
+  gm <- prod(ev)^(1/p)
+  m <- mean(ev)
+  C1 <- p/2*log(m/gm)
+  c(-2*LL + df*(log(n) + 1) + 2*C1)
+}
+
+#' @rdname ICOMP
+#' @export
+CICOMP_C1F <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  n <- length(model$residuals)
+  ev <- eigen(reverse_fisher(model))$values
+  m <- mean(ev)
+  C1F <- sum((ev - m)^2)/(4*m^2)
+  c(-2*LL + df*(log(n) + 1) + 2*C1F)
+}
+
+#' @rdname ICOMP
+#' @export
+CICOMP_C1R <- function(model) {
+  LL <- logLik(object = model)
+  df <- attr(LL, "df")
+  n <- length(model$residuals)
+  R <- cov2cor(reverse_fisher(model))
+  C1R <- -0.5*log(det(R))
+  c(-2*LL + df*(log(n) + 1) + 2*C1R)
+}

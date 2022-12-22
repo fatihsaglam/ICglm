@@ -1,0 +1,134 @@
+#' @title  Information Criteria
+#'
+#' @description Calculates Various Information Criteria for "lm" and "glm" objects.
+#'
+#' @param model a "lm" or "glm" object or object list
+#' @param criteria a vector of criteria names. Can be set to respective numbers. Possible criteria names at the moment are: \cr
+#'    1 = "AIC" \cr
+#'    2 = "AIC4" \cr
+#'    3 = "BIC" \cr
+#'    4 = "BICadj" \cr
+#'    5 = "BICQ" \cr
+#'    6 = "CAIC" \cr
+#'    7 = "CAICF" \cr
+#'    8 = "FIC" \cr
+#'    9 = "GCV" \cr
+#'    10 = "HBIV" \cr
+#'    11 = "GQIC" \cr
+#'    12 = "IBIC" \cr
+#'    13 = "ICOMP_IFIM_CF" \cr
+#'    14 = "ICOMP_IFIM_C1" \cr
+#'    15 = "ICOMP_IFIM_C1F" \cr
+#'    16 = "ICOMP_IFIM_C1R" \cr
+#'    17 = "ICOMP_PEU_CF" \cr
+#'    18 = "ICOMP_PEU_C1" \cr
+#'    19 = "ICOMP_PEU_C1F" \cr
+#'    20 = "ICOMP_PEU_C1R" \cr
+#'    21 = "ICOMP_PEU_LN_CF" \cr
+#'    22 = "ICOMP_PEU_LN_C1" \cr
+#'    23 = "ICOMP_PEU_LN_C1F" \cr
+#'    24 = "ICOMP_PEU_LN_C1R" \cr
+#'    25 = "CICOMP_CF" \cr
+#'    26 = "CICOMP_C1" \cr
+#'    27 = "CICOMP_C1F" \cr
+#'    28 = "CICOMP_C1R" \cr
+#'    29 = "JIC" \cr
+#'    30 = "KIC" \cr
+#'    31 = "KICC" \cr
+#'    32 = "SPBIC"
+#'
+#' @param ... additional parameters. Currently none.
+#'
+#' @details
+#' Calculates Various Information Criteria for "lm" and "glm" objects.
+#' \code{model} can be a list. If it is a list, function returns a
+#' matrix of selected information criteria for all models.
+#'
+#' @return Information criteria of the model(s) for selected criteria
+#'
+#' @examples
+#' x1 <- rnorm(100, 3, 2)
+#' x2 <- rnorm(100, 5, 3)
+#' x3 <- rnorm(100, 67, 5)
+#' err <- rnorm(100, 0, 4)
+#'
+#' ## round so we can use it for Poisson regression
+#' y <- round(3 + 2*x1 - 5*x2 + 8*x3 + err)
+#'
+#' m1 <- lm(y~x1 + x2 + x3)
+#' m2 <- glm(y~x1 + x2 + x3, family = "gaussian")
+#' m3 <- glm(y~x1 + x2 + x3, family = "poisson")
+#'
+#'IC(model = m1, criteria = 1:32)
+#'IC(model = list(lm = m1,
+#'                glm = m2,
+#'                glm_pois = m3), criteria = 1:32)
+#'
+#' @export
+
+IC <- function(model,
+               criteria = c("AIC",
+                            "BIC",
+                            "CAIC",
+                            "KIC",
+                            "HQIC",
+                            "FIC",
+                            "ICOMP_IFIM_C1",
+                            "ICOMP_PEU_C1",
+                            "ICOMP_PEU_LN_C1",
+                            "CICOMP_C1"),
+               ...) {
+  if (is.null(criteria)) {
+    stop("No criteria names found")
+  }
+
+  if(is.numeric(criteria)) {
+    method_names <- c(
+      "AIC",
+      "AIC4",
+      "BIC",
+      "BICadj",
+      "BICQ",
+      "CAIC",
+      "CAICF",
+      "FIC",
+      "GCV",
+      "HBIC",
+      "HQIC",
+      "IBIC",
+      "ICOMP_IFIM_CF",
+      "ICOMP_IFIM_C1",
+      "ICOMP_IFIM_C1F",
+      "ICOMP_IFIM_C1R",
+      "ICOMP_PEU_CF",
+      "ICOMP_PEU_C1",
+      "ICOMP_PEU_C1F",
+      "ICOMP_PEU_C1R",
+      "ICOMP_PEU_LN_CF",
+      "ICOMP_PEU_LN_C1",
+      "ICOMP_PEU_LN_C1F",
+      "ICOMP_PEU_LN_C1R",
+      "CICOMP_CF",
+      "CICOMP_C1",
+      "CICOMP_C1F",
+      "CICOMP_C1R",
+      "JIC",
+      "KIC",
+      "KICC",
+      "SPBIC"
+    )
+
+    criteria <- method_names[criteria]
+  }
+
+  if (class(model) == "list") {
+    if (is.null(names(model))) {
+      names(model) <- paste("model", 1:length(model))
+    }
+    ff <- sapply(criteria, function(m) lapply(model, function(m2) match.fun(m)(m2)))
+    return(list(results = ff))
+  } else {
+    ff <- sapply(criteria, function(m) match.fun(m)(model))
+    return(list(results = ff))
+  }
+}
