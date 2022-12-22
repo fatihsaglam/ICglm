@@ -15,13 +15,11 @@
 #' @return Information Criteria value
 #'
 #' @importFrom Matrix bdiag
+#' @importFrom stats model.matrix
+#' @importFrom methods is
 #'
 #'
-#' @examples
-#'
-#' @references
-#'
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 AIC <- function(model) {
@@ -30,7 +28,7 @@ AIC <- function(model) {
   c(-2*LL + 2*df)
 }
 
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 BIC <- function(model) {
@@ -40,7 +38,7 @@ BIC <- function(model) {
   c(-2*LL + df*log(n))
 }
 
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 BIC_Q <- function(model, q = 0.5) {
@@ -50,7 +48,7 @@ BIC_Q <- function(model, q = 0.5) {
   c(-2*LL + df*log(n) - 2*df*log(q/(1-q)))
 }
 
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 BIC_adj <- function(model, q = 0.5) {
@@ -60,7 +58,7 @@ BIC_adj <- function(model, q = 0.5) {
   c(-2*LL + df*log((n+2)/24))
 }
 
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 CAIC <- function(model) {
@@ -70,7 +68,7 @@ CAIC <- function(model) {
   c(-2*LL + df*(log(n) + 1))
 }
 
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 KIC <- function(model) {
@@ -78,15 +76,15 @@ KIC <- function(model) {
   df <- attr(LL, "df")
   c(-2*LL + 3*df)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
-AIC_4 <- function(model) {
+AIC4 <- function(model) {
   LL <- logLik(object = model)
   df <- attr(LL, "df")
   c(-2*LL + 4*df)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 HQIC <- function(model) {
@@ -94,7 +92,7 @@ HQIC <- function(model) {
   df <- attr(LL, "df")
   c(-2*LL + 2*df*log(log(n)))
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 FIC <- function(model) {
@@ -102,7 +100,7 @@ FIC <- function(model) {
   X <- model.matrix(model)
   c(-2*LL + log(det(crossprod(X))))
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 ICOMP_IFIM_CF <- function(model) {
@@ -112,7 +110,7 @@ ICOMP_IFIM_CF <- function(model) {
   CF <- mean((ev - m)^2)
   c(-2*LL + 2*CF)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 ICOMP_IFIM_C1 <- function(model) {
@@ -124,7 +122,7 @@ ICOMP_IFIM_C1 <- function(model) {
   C1 <- p/2*log(m/gm)
   c(-2*LL + 2*C1)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 ICOMP_IFIM_C1F <- function(model) {
@@ -134,7 +132,7 @@ ICOMP_IFIM_C1F <- function(model) {
   C1F <- sum((ev - m)^2)/(4*m^2)
   c(-2*LL + 2*C1F)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 ICOMP_IFIM_C1R <- function(model) {
@@ -145,7 +143,7 @@ ICOMP_IFIM_C1R <- function(model) {
 }
 
 
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 
@@ -157,7 +155,7 @@ ICOMP_PEU_CF <- function(model) {
   CF <- mean((ev - m)^2)
   c(-2*LL + 2*CF + df)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 ICOMP_PEU_C1 <- function(model) {
@@ -170,7 +168,7 @@ ICOMP_PEU_C1 <- function(model) {
   C1 <- p/2*log(m/gm)
   c(-2*LL + 2*C1 + df)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 ICOMP_PEU_C1F <- function(model) {
@@ -181,7 +179,7 @@ ICOMP_PEU_C1F <- function(model) {
   C1F <- sum((ev - m)^2)/(4*m^2)
   c(-2*LL + 2*C1F + df)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 ICOMP_PEU_C1R <- function(model) {
@@ -191,7 +189,7 @@ ICOMP_PEU_C1R <- function(model) {
   C1R <- -0.5*log(det(R))
   c(-2*LL + 2*C1R + df)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 ICOMP_PEU_LN_CF <- function(model) {
@@ -203,7 +201,7 @@ ICOMP_PEU_LN_CF <- function(model) {
   CF <- mean((ev - m)^2)
   c(-2*LL + 2*log(n)*CF + df)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 ICOMP_PEU_LN_C1 <- function(model) {
@@ -217,7 +215,7 @@ ICOMP_PEU_LN_C1 <- function(model) {
   C1 <- p/2*log(m/gm)
   c(-2*LL + 2*log(n)*C1 + df)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 ICOMP_PEU_LN_C1F <- function(model) {
@@ -229,7 +227,7 @@ ICOMP_PEU_LN_C1F <- function(model) {
   C1F <- sum((ev - m)^2)/(4*m^2)
   c(-2*LL + 2*log(n)*C1F + df)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 ICOMP_PEU_LN_C1R <- function(model) {
@@ -240,7 +238,7 @@ ICOMP_PEU_LN_C1R <- function(model) {
   C1R <- -0.5*log(det(R))
   c(-2*LL + 2*log(n)*C1R + df)
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 CAIC_F <- function(model) {
@@ -249,7 +247,7 @@ CAIC_F <- function(model) {
   n <- length(model$residuals)
   c(-2*LL + df*(log(n) + 2) + log(det(solve(reverse_fisher(model)))))
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 JIC <- function(model) {
@@ -258,7 +256,7 @@ JIC <- function(model) {
   n <- length(model$residuals)
   c(-2*LL + 0.5*(df*log(n) - n*log(1 - df/n)))
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 IBIC <- function(model) {
@@ -267,7 +265,7 @@ IBIC <- function(model) {
   n <- length(model$residuals)
   c(-2*LL + df*log(n/(2*pi) + log(det(solve(reverse_fisher(model))))))
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 SPBIC <- function(model) {
@@ -278,7 +276,7 @@ SPBIC <- function(model) {
   E <- coeff%*%Fisher_M%*%coeff
   c(-2*LL + df*(1 - log(df/(E))))
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 HBIC <- function(model) {
@@ -287,13 +285,18 @@ HBIC <- function(model) {
   n <- length(model$residuals)
   c(-2*LL + df*log(n/(2*pi)))
 }
-#' @rdname IC
+#' @rdname criterias
 #' @export
 
 GCV <- function(model) {
   LL <- logLik(object = model)
-  res <- model$residuals
-  RSS <- mean(res^2)
+  n <- length(model$residuals)
+  if (is(model, "glm")) {
+    res <- model$y - model$fitted.values
+  } else {
+    res <- model$residuals
+  }
+  MSE <- mean(res^2)
   df <- attr(LL, "df")
-  RSS/(1 - df/n)^2
+  MSE/(1 - df/n)^2
 }

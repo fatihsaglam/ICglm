@@ -12,11 +12,6 @@
 #'
 #' @importFrom Matrix bdiag
 #'
-#'
-#' @examples
-#'
-#' @references
-#'
 #' @export
 
 reverse_fisher <- function(model){
